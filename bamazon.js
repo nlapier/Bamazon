@@ -1,6 +1,6 @@
 var mysql = require("mysql");
 var prompt = require("prompt");
-var table = require("cli-table");
+var Table = require("cli-table");
 
 
 var connection = mysql.createConnection({
@@ -19,11 +19,43 @@ var connection = mysql.createConnection({
 function displayAll(){
 	connection.query("SELECT * FROM Products", function(error, results){
 		if(error){throw error};
-		console.log(results);
+
+		var inventory = new Table({ head: ["ID", "Product Name", "Department", "Price", "Quantity in stock"]});
+		results.forEach(function(value, index, array){
+			//Store each item's properties into variables
+			var idNum = value.id.toString();
+			var product = value.ProductName;
+			var dept = value.DepartmentName;
+			var price = value.Price;
+			var stock = value.StockQuantity;
+
+			//Push these properties into a new object, then into the cli-table constructor
+			var newLine = {};
+			newLine[idNum] = [product, dept, price, stock]
+			inventory.push(newLine);
+		})
+		console.log(inventory.toString());
 	})
 }
 // displayAll();
 //Products (ProductName, DepartmentName, Price, StockQuantity)
+
+
+
+// var inventory = new Table({ head: ["ID", "Product Name", "Department", "Price", "Quantity in stock"] });
+ 
+// results.forEach(function(value, index, array){
+
+// 	var idNumber = 
+// 	inventory.push(array[index].
+
+// })
+
+// inventory.push(
+  //   { '1': ['Value Row 1 Col 1', 'Value Row 1 Col 2'] }
+  // , { '2': ['Value Row 2 Col 1', 'Value Row 2 Col 2'] }
+// );
+
 
 //Returns an object for the specified item
 function getItem(id){
@@ -53,9 +85,18 @@ function purchase(){
 	prompt.get(["ID", "Quantity"], function(error, results){
 		if(error){throw error};
 
+		// var itemID = Number(results.ID);
+		// var printItem = getItem(itemID);
+		// console.log("printItem: " + printItem);
+
+		//Store the selected product in an object
+		var itemID = Number(results.ID);
+		var selectedItem = getItem(itemID);
+		console.log(selectedItem);
+		
 		//Get the current StockQuantity of the specified item
-		var selectedItem = getItem(results.ID);
 		var currentQuantity = selectedItem.StockQuantity;
+
 		//Store the item's name and price for later use
 		var itemName = selectedItem.ProductName;
 		var totalPrice = selectedItem.Price * results.Quantity;
@@ -65,7 +106,7 @@ function purchase(){
 
 		//If there's enough in stock, complete the purchase via changeInventory
 		if (currentQuantity >= results.Quantity){
-			changeInventory(results.ID, currentQuantity, changeQuantity);
+			changeInventory(itemID, currentQuantity, changeQuantity);
 
 			//Print the results of the transaction
 			console.log("Your purchase: " + itemName);
@@ -86,4 +127,5 @@ function purchase(){
 //****************
 console.log("Welcome to Bamazon!  Here is our product catalog:");
 displayAll();
-setTimeout(function(){purchase()}, 4000);
+purchase();
+// setTimeout(function(){purchase()}, 4000);
